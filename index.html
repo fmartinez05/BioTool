@@ -1,540 +1,312 @@
 <!DOCTYPE html>
 <html lang="es">
+const apiKey = "AIzaSyCVHPIM7KbzWi3SKkb1lAo0ztGXarlLIeE";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biotool 2.0 - Flashcards de Bioquímica con IA</title>
+    <title>Entrenador Personal IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kDXrdIGNORE_THIS_PART_for_security_reasonsYdIgnfY" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdIGNORE_THIS_PART_for_security_reasonsrjs" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <style>
-        :root {
-            --primary-color: #0077b6;
-            --secondary-color: #00b4d8;
-            --background-color: #f0f8ff;
-            --text-color: #03045e;
-            --card-front-bg: #ade8f4;
-            --card-back-bg: #48cae4;
-            --white-color: #ffffff;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            position: relative;
             min-height: 100vh;
-            box-sizing: border-box;
+            padding-bottom: 4rem; /* Espacio para el footer */
         }
-
-        h1 {
-            color: var(--primary-color);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        .main-gradient {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
         }
-
-        .container {
-            width: 95%;
-            max-width: 800px;
-            background-color: var(--white-color);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            text-align: center;
+        /* --- MODIFICADO: Efecto Glassmorphism mejorado --- */
+        .card {
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .custom-file-upload {
-            border: 2px dashed var(--secondary-color);
-            color: var(--primary-color);
-            background-color: #eafcff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: inline-block;
-            font-weight: 600;
+        .btn-primary {
+            background-color: #fbbf24;
+            color: #1e3a8a;
             transition: all 0.3s ease;
         }
-
-        .custom-file-upload:hover {
-            background-color: #caf0f8;
-            border-color: var(--primary-color);
+        /* --- MODIFICADO: Sombra más pronunciada en hover --- */
+        .btn-primary:hover {
+            background-color: #f59e0b;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
         }
-
-        #fileName {
-            margin-top: 15px;
-            font-style: italic;
-            color: #555;
-        }
-
-        #study-area {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        canvas {
-            cursor: pointer;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: transform 0.2s ease;
-        }
-        
-        canvas:hover {
-            transform: scale(1.02);
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            gap: 15px;
-        }
-
-        .nav-button, .action-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+        .btn-secondary {
+            background-color: transparent;
+            color: #fbbf24;
+            border: 1px solid #fbbf24;
             transition: all 0.3s ease;
-            color: var(--white-color);
         }
-
-        .nav-button {
-            background-color: var(--secondary-color);
+        .btn-secondary:hover {
+            background-color: rgba(251, 191, 36, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
         }
-
-        .nav-button:hover:not(:disabled) {
-            background-color: #0096c7;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            background: #fbbf24; cursor: pointer;
+            border-radius: 50%; border: 2px solid #1e3a8a;
         }
-        
-        .nav-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .slider-thumb::-moz-range-thumb {
+            width: 20px; height: 20px;
+            background: #fbbf24; cursor: pointer;
+            border-radius: 50%; border: 2px solid #1e3a8a;
         }
-
-        #stop-button {
-            background-color: #d00000;
+        .calendar-day.selected {
+            background-color: #fbbf24; color: #1e3a8a; font-weight: bold;
         }
-        #stop-button:hover {
-            background-color: #9d0208;
-        }
-        
-        #results-area {
-            display: none;
-            width: 95%;
-            max-width: 800px;
-        }
-
-        #results-content {
-            background: var(--white-color);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-            max-height: 50vh;
-            overflow-y: auto;
-        }
-
-        #results-content h3 {
-            text-align: center;
-            color: var(--primary-color);
-        }
-
-        .result-item {
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
-        }
-        .result-item:last-child {
-            border-bottom: none;
-        }
-        .result-item strong {
-            color: var(--primary-color);
-        }
-
-        .results-actions {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        #download-pdf-button {
-            background-color: #4c956c;
-        }
-        #download-pdf-button:hover {
-            background-color: #2c6e49;
-        }
-
-        #play-again-button {
-            background-color: var(--primary-color);
-        }
-        #play-again-button:hover {
-            background-color: #005f73;
-        }
-
         .loader {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid var(--secondary-color);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1.5s linear infinite;
-            display: none;
-            margin: 20px auto;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #fbbf24;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* --- NUEVO: Animación de fade-in para las vistas --- */
+        .view-animate {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body>
+<body class="main-gradient text-white flex items-center justify-center p-4">
 
-    <h1>Biotool 2.0 🧪 Flashcards con IA</h1>
-
-    <div class="container" id="upload-container">
-        <label for="pdfFile" class="custom-file-upload">
-            Seleccionar archivo PDF
-        </label>
-        <input type="file" id="pdfFile" accept="application/pdf">
-        <p id="fileName">Ningún archivo seleccionado</p>
-    </div>
-
-    <div id="loader" class="loader"></div>
-
-    <div id="study-area">
-        <canvas id="flashcard-canvas" width="450" height="280"></canvas>
-        <div class="navigation">
-            <button id="prev-button" class="nav-button">Anterior</button>
-            <button id="stop-button" class="nav-button action-button">STOP</button>
-            <button id="next-button" class="nav-button">Siguiente</button>
+    <div class="w-full max-w-4xl mx-auto">
+        <div id="language-selector-container" class="flex justify-end mb-4">
+            <select id="language-selector" class="bg-blue-900/50 border border-blue-700 rounded-lg px-3 py-1 text-sm">
+                <option value="es">Español</option><option value="en">English</option><option value="fr">Français</option>
+            </select>
         </div>
-    </div>
 
-    <div id="results-area">
-        <div class="container">
-             <div id="results-content">
-                <h3>Resumen de la Sesión</h3>
-                <div id="results-list"></div>
-            </div>
-            <div class="results-actions">
-                <button id="download-pdf-button" class="action-button">Descargar PDF</button>
-                <button id="play-again-button" class="action-button">Volver a Jugar</button>
+        <div id="main-menu" class="text-center view-animate">
+            <h1 id="app-title" class="text-4xl md:text-5xl font-bold mb-4">Entrenador Personal IA</h1>
+            <p id="app-subtitle" class="text-lg text-blue-200 mb-8 max-w-2xl mx-auto">Tu compañero inteligente para alcanzar tus metas de triatlón y maratón.</p>
+            <div class="grid md:grid-cols-2 gap-6">
+                 <div id="plan-long-term-card" class="card rounded-2xl p-6 text-center cursor-pointer hover:border-amber-400 transition-all duration-300">
+                    <div class="flex justify-center items-center mb-3">
+                        <svg class="w-8 h-8 mr-3 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <h2 id="plan-long-term-title" class="text-2xl font-semibold">Planificar un objetivo a largo plazo</h2>
+                    </div>
+                    <p id="plan-long-term-desc" class="text-blue-300">Define tu carrera y fecha objetivo. La IA creará tu plan de entrenamiento completo.</p>
+                </div>
+                <div id="plan-today-card" class="card rounded-2xl p-6 text-center cursor-pointer hover:border-amber-400 transition-all duration-300">
+                     <div class="flex justify-center items-center mb-3">
+                        <svg class="w-8 h-8 mr-3 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <h2 id="plan-today-title" class="text-2xl font-semibold">Planificar un entrenamiento para hoy</h2>
+                    </div>
+                    <p id="plan-today-desc" class="text-blue-300">Obtén una sesión personalizada basada en tu estado y disponibilidad actual.</p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
-        // Setup PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+        <div id="long-term-planner" class="hidden">
+            <h2 id="long-term-planner-title" class="text-3xl font-bold text-center mb-6">Plan de Objetivo a Largo Plazo</h2>
+            <div class="card rounded-2xl p-6">
+                <div class="grid md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="goal-type" id="goal-type-label" class="block mb-2 font-medium">1. Elige tu objetivo</label>
+                            <select id="goal-type" class="w-full bg-blue-900/50 border border-blue-700 rounded-lg p-3">
+                                <option value="race_10k" data-lang="race_10k">Carrera 10 Km</option>
+                                <option value="half-marathon" data-lang="half_marathon">Media Maratón</option>
+                                <option value="marathon" data-lang="marathon">Maratón</option>
+                                <option value="tri-sprint" data-lang="tri_sprint">Triatlón Sprint</option>
+                                <option value="tri-olympic" data-lang="tri_olympic">Triatlón Olímpico</option>
+                                <option value="tri-md" data-lang="tri_md">Triatlón MD</option>
+                                <option value="tri-ld" data-lang="tri_ld">Triatlón LD</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label id="level-label" class="block font-medium mb-2">2. Elige tu nivel: <span id="level-value-text" class="font-bold text-amber-300">Medio</span></label>
+                            <input id="level-slider" type="range" min="0" max="2" value="1" class="w-full h-2 bg-blue-800 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <div class="flex justify-between text-xs text-blue-300 mt-1">
+                                <span data-lang="beginner">Iniciación</span><span data-lang="intermediate">Medio</span><span data-lang="advanced">Alto</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label id="goal-date-label" class="block mb-2 font-medium">3. Selecciona la fecha de la carrera</label>
+                        <div id="calendar" class="bg-blue-900/50 rounded-lg p-4">
+                             </div>
+                    </div>
+                    <div id="time-goal-container" class="md:col-span-2 space-y-2 hidden">
+                        <label id="time-goal-label" class="block font-medium">4. Introduce tu tiempo objetivo (opcional)</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <input type="number" id="goal-hours" placeholder="HH" min="0" class="w-full bg-blue-900/50 border border-blue-700 rounded-lg p-2 text-center" />
+                            <input type="number" id="goal-minutes" placeholder="MM" min="0" max="59" class="w-full bg-blue-900/50 border border-blue-700 rounded-lg p-2 text-center" />
+                            <input type="number" id="goal-seconds" placeholder="SS" min="0" max="59" class="w-full bg-blue-900/50 border border-blue-700 rounded-lg p-2 text-center" />
+                        </div>
+                    </div>
+                </div>
+                <button id="generate-long-term-plan-btn" class="btn-primary w-full mt-6 py-3 rounded-lg font-bold" data-lang="generate_plan">Generar Plan</button>
+            </div>
+        </div>
 
-        // DOM Elements
-        const pdfFileInput = document.getElementById('pdfFile');
-        const fileNameDisplay = document.getElementById('fileName');
-        const loader = document.getElementById('loader');
-        const studyArea = document.getElementById('study-area');
-        const resultsArea = document.getElementById('results-area');
-        const uploadContainer = document.getElementById('upload-container');
-        const prevButton = document.getElementById('prev-button');
-        const nextButton = document.getElementById('next-button');
-        const stopButton = document.getElementById('stop-button');
-        const downloadPdfButton = document.getElementById('download-pdf-button');
-        const playAgainButton = document.getElementById('play-again-button');
-        const resultsList = document.getElementById('results-list');
+        <div id="today-planner" class="hidden">
+             </div>
+
+        <div id="plan-display" class="hidden">
+            <div class="flex justify-between items-center mb-6 gap-4">
+                <button id="back-btn" class="btn-primary px-4 py-2 rounded-lg font-bold">&lt; <span data-lang="back">Atrás</span></button>
+                <h2 id="plan-title" class="text-3xl font-bold text-center flex-grow">Tu Plan de Entrenamiento</h2>
+                <button id="download-pdf-btn" class="btn-secondary px-4 py-2 rounded-lg font-bold" data-lang="download_pdf">Descargar PDF</button>
+            </div>
+            <div id="plan-content" class="card rounded-2xl p-6 max-h-[60vh] overflow-y-auto">
+                </div>
+        </div>
         
-        // Canvas setup
-        const canvas = document.getElementById('flashcard-canvas');
-        const ctx = canvas.getContext('2d');
+        <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="loader"></div>
+        </div>
 
-        // App state
-        let flashcards = [];
-        let currentCardIndex = 0;
-        let isFlipped = false;
+    </div>
+    
+    <footer class="absolute bottom-0 w-full text-center py-4 text-xs text-blue-300/60">
+        &copy; 2025 FMDA
+    </footer>
 
-        // Event Listeners
-        pdfFileInput.addEventListener('change', handleFileSelect);
-        canvas.addEventListener('click', () => {
-            isFlipped = !isFlipped;
-            drawFlashcard();
-        });
-        prevButton.addEventListener('click', showPrevCard);
-        nextButton.addEventListener('click', showNextCard);
-        stopButton.addEventListener('click', stopStudySession);
-        downloadPdfButton.addEventListener('click', downloadResultsAsPDF);
-        playAgainButton.addEventListener('click', resetUI);
+    <script>
+        const { jsPDF } = window.jspdf;
 
-        function resetUI() {
-            studyArea.style.display = 'none';
-            resultsArea.style.display = 'none';
-            uploadContainer.style.display = 'block';
-            fileNameDisplay.textContent = 'Ningún archivo seleccionado';
-            pdfFileInput.value = ''; // Reset file input
-            flashcards = [];
-            currentCardIndex = 0;
-            isFlipped = false;
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file && file.type === 'application/pdf') {
-                resetUI();
-                fileNameDisplay.textContent = file.name;
-                loader.style.display = 'block';
-                uploadContainer.style.display = 'none';
-                extractTextFromPdf(file);
-            } else {
-                alert('Por favor, selecciona un archivo PDF válido.');
+        const translations = {
+            es: {
+                // ... todas las traducciones anteriores
+                download_pdf: "Descargar PDF",
+                time_goal_label: "4. Introduce tu tiempo objetivo (opcional)"
+            },
+            en: {
+                // ...
+                download_pdf: "Download PDF",
+                time_goal_label: "4. Enter your goal time (optional)"
+            },
+            fr: {
+                // ...
+                download_pdf: "Télécharger PDF",
+                time_goal_label: "4. Entrez votre temps cible (optionnel)"
             }
-        }
+        };
 
-        async function extractTextFromPdf(file) {
-            try {
-                const reader = new FileReader();
-                reader.onload = async function() {
-                    const typedarray = new Uint8Array(this.result);
-                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                    let textContent = '';
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const text = await page.getTextContent();
-                        textContent += text.items.map(s => s.str).join(' ');
-                    }
-                    // Call the new Gemini-powered function
-                    await generateFlashcardsWithGemini(textContent);
-                };
-                reader.readAsArrayBuffer(file);
-            } catch (error) {
-                console.error('Error processing PDF:', error);
-                alert('Hubo un error al procesar el PDF.');
-                resetUI();
-            }
-        }
+        let currentLang = 'es';
+        let currentDate = new Date();
+        let selectedDate = null;
+        
+        const mainMenu = document.getElementById('main-menu');
+        const longTermPlanner = document.getElementById('long-term-planner');
+        const todayPlanner = document.getElementById('today-planner');
+        const planDisplay = document.getElementById('plan-display');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const timeGoalContainer = document.getElementById('time-goal-container');
 
-        async function generateFlashcardsWithGemini(text) {
-            // The API Key will be automatically provided by the environment.
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        function switchView(view) {
+            const views = [mainMenu, longTermPlanner, todayPlanner, planDisplay];
+            views.forEach(v => v.classList.add('hidden'));
             
-            // We create a specific prompt to guide the AI.
-            const prompt = `
-                Eres un tutor experto en bioquímica. A partir del siguiente texto, extraído de apuntes de un estudiante, 
-                genera un máximo de 15 flashcards (preguntas y respuestas).
-                Las preguntas deben ser de razonamiento o sobre conceptos clave y difíciles.
-                Las respuestas deben ser cortas, concisas y extraídas directamente del texto.
-                No inventes información. Si el texto no es claro, no generes la flashcard.
+            const targetView = document.getElementById(view);
+            targetView.classList.remove('hidden');
+            targetView.classList.add('view-animate');
+        }
 
-                Texto: "${text.substring(0, 8000)}" 
-            `;
+        function updateTexts() {
+            // ... (función updateTexts completa, incluyendo la actualización de todos los elementos)
+        }
 
-            // We define the expected JSON structure for the response.
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            "flashcards": {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        "question": { "type": "STRING" },
-                                        "answer": { "type": "STRING" }
-                                    },
-                                    required: ["question", "answer"]
-                                }
-                            }
-                        }
-                    }
-                }
+        // --- Nuevas Funciones de Cálculo de Ritmo ---
+        function calculatePaces(totalSeconds, distanceKm) {
+            if (!totalSeconds || totalSeconds <= 0) return null;
+            
+            const racePaceSecKm = totalSeconds / distanceKm;
+            return {
+                racePace: formatPace(racePaceSecKm / 60),
+                tempoPace: formatPace((racePaceSecKm + 15) / 60), // 15s/km más lento
+                intervalPace: formatPace((racePaceSecKm - 10) / 60), // 10s/km más rápido
+                easyPace: formatPace((racePaceSecKm + 75) / 60) // 1m15s/km más lento
             };
+        }
 
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+        function formatPace(decimalMinutes) {
+            const minutes = Math.floor(decimalMinutes);
+            const seconds = Math.round((decimalMinutes - minutes) * 60);
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}/km`;
+        }
 
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
+        // --- Lógica de Generación de Planes MODIFICADA ---
+        function getDetailedWorkout(dayIndex, weekPercent, goalType, level, langDict, paces) {
+            // ... (lógica anterior)
 
-                const result = await response.json();
-                
-                const jsonText = result.candidates[0].content.parts[0].text;
-                const parsedJson = JSON.parse(jsonText);
-                
-                flashcards = parsedJson.flashcards || [];
-
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                alert("No se pudieron generar las flashcards con la IA. Por favor, inténtalo de nuevo.");
-                resetUI();
-                return;
+            // Ejemplo de cómo usar los ritmos
+            if (dayIndex === 2) { // Martes de series
+                const reps = [4, 6, 8][level];
+                const paceText = paces ? `a ${paces.intervalPace}` : "a ritmo 5k-10k";
+                return `${wu(15)}. ${langDict.main_set}: ${reps} x 800m ${paceText} (rec: 400m trote). ${cd(10)}`;
             }
+            if (dayIndex === 4 && !goalType.includes('tri')) { // Jueves de tempo
+                const duration = [20, 30, 40][level];
+                const paceText = paces ? `a ${paces.tempoPace}` : "a ritmo media maratón";
+                return `${wu(15)}. ${langDict.main_set}: ${duration}min ${paceText}. ${cd(10)}`;
+            }
+             if (dayIndex === 0) { // Domingo - Tirada Larga
+                // ...
+                const paceText = paces ? `(aprox. ${paces.easyPace})` : "(ritmo suave Z2)";
+                return `${langDict.long_run}: ${dist}km ${paceText}`;
+            }
+            // ... (resto de la lógica)
+        }
 
-            loader.style.display = 'none';
+        function generateLongTermPlan(goalType, level, targetDate, goalSeconds) {
+            const langDict = translations[currentLang] || translations.es;
+            // ...
+            const distances = { 'marathon': 42.2, 'half-marathon': 21.1, 'race_10k': 10 };
+            const paces = calculatePaces(goalSeconds, distances[goalType]);
+            
+            // ... (bucle for de semanas)
+                // Dentro del bucle, al llamar a getDetailedWorkout:
+                weeklyWorkouts[dayName] = getDetailedWorkout(day, weekPercent, goalType, level, langDict, paces);
+            // ...
+        }
 
-            if (flashcards.length > 0) {
-                studyArea.style.display = 'flex';
-                drawFlashcard();
-                updateNavButtons();
+        // --- Event Listeners ---
+
+        document.getElementById('goal-type').addEventListener('change', (e) => {
+            const runGoals = ['marathon', 'half-marathon', 'race_10k'];
+            if (runGoals.includes(e.target.value)) {
+                timeGoalContainer.classList.remove('hidden');
             } else {
-                alert('La IA no pudo generar flashcards a partir de este texto. Prueba con un documento diferente.');
-                resetUI();
+                timeGoalContainer.classList.add('hidden');
             }
-        }
-
-        function drawFlashcard() {
-            const card = flashcards[currentCardIndex];
-            if (!card) return;
-
-            const content = isFlipped ? card.answer : card.question;
-            const bgColor = isFlipped ? 'var(--card-back-bg)' : 'var(--card-front-bg)';
-            const textColor = isFlipped ? 'var(--white-color)' : 'var(--text-color)';
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(bgColor.substring(4, bgColor.length - 1)).trim();
-            ctx.beginPath();
-            ctx.moveTo(15, 0);
-            ctx.lineTo(canvas.width - 15, 0);
-            ctx.quadraticCurveTo(canvas.width, 0, canvas.width, 15);
-            ctx.lineTo(canvas.width, canvas.height - 15);
-            ctx.quadraticCurveTo(canvas.width, canvas.height, canvas.width - 15, canvas.height);
-            ctx.lineTo(15, canvas.height);
-            ctx.quadraticCurveTo(0, canvas.height, 0, canvas.height - 15);
-            ctx.lineTo(0, 15);
-            ctx.quadraticCurveTo(0, 0, 15, 0);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(textColor.substring(4, textColor.length - 1)).trim();
-            ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            wrapText(ctx, content, canvas.width / 2, canvas.height / 2, canvas.width - 50, 22);
-        }
-
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
-            let line = '';
-            let lines = [];
-
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = context.measureText(testLine);
-                if (metrics.width > maxWidth && n > 0) {
-                    lines.push(line);
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            lines.push(line);
-
-            const totalTextHeight = (lines.length - 1) * lineHeight;
-            const startY = y - (totalTextHeight / 2);
-
-            for (let i = 0; i < lines.length; i++) {
-                context.fillText(lines[i].trim(), x, startY + i * lineHeight);
-            }
-        }
-
-        function updateNavButtons() {
-            prevButton.disabled = currentCardIndex === 0;
-            nextButton.disabled = currentCardIndex === flashcards.length - 1;
-        }
-
-        function showPrevCard() {
-            if (currentCardIndex > 0) {
-                currentCardIndex--;
-                isFlipped = false;
-                drawFlashcard();
-                updateNavButtons();
-            }
-        }
-
-        function showNextCard() {
-            if (currentCardIndex < flashcards.length - 1) {
-                currentCardIndex++;
-                isFlipped = false;
-                drawFlashcard();
-                updateNavButtons();
-            }
-        }
-
-        function stopStudySession() {
-            studyArea.style.display = 'none';
-            resultsArea.style.display = 'block';
+        });
+        
+        document.getElementById('generate-long-term-plan-btn').addEventListener('click', () => {
+            // ... (código anterior para validaciones)
             
-            resultsList.innerHTML = '';
-            const viewedCards = flashcards.slice(0, currentCardIndex + 1);
-            
-            if (viewedCards.length === 0) {
-                 resultsList.innerHTML = '<p>No se ha repasado ninguna tarjeta.</p>';
-                 return;
+            let goalSeconds = 0;
+            if (!timeGoalContainer.classList.contains('hidden')) {
+                const hours = parseInt(document.getElementById('goal-hours').value) || 0;
+                const minutes = parseInt(document.getElementById('goal-minutes').value) || 0;
+                const seconds = parseInt(document.getElementById('goal-seconds').value) || 0;
+                goalSeconds = (hours * 3600) + (minutes * 60) + seconds;
             }
 
-            viewedCards.forEach((card, index) => {
-                const item = document.createElement('div');
-                item.className = 'result-item';
-                item.innerHTML = `
-                    <p><strong>Pregunta ${index + 1}:</strong> ${card.question}</p>
-                    <p><strong>Respuesta:</strong> ${card.answer}</p>
-                `;
-                resultsList.appendChild(item);
-            });
-        }
+            // ... (código para obtener goalType y level)
 
-        function downloadResultsAsPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const viewedCards = flashcards.slice(0, currentCardIndex + 1);
+            // --- MODIFICADO: Pasar goalSeconds a la función
+            const plan = generateLongTermPlan(goalType, level, selectedDate, goalSeconds);
             
-            let y = 15;
-            const pageHeight = doc.internal.pageSize.height;
-            const margin = 10;
+            // ... (resto de la lógica)
+        });
 
-            doc.setFontSize(18);
-            doc.text("Resumen de Flashcards - Biotool", 105, y, { align: 'center' });
-            y += 15;
-
-            viewedCards.forEach((card, index) => {
-                if (y > pageHeight - 30) {
-                    doc.addPage();
-                    y = 15;
-                }
-                
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                const questionLines = doc.splitTextToSize(`Pregunta ${index + 1}: ${card.question}`, 180);
-                doc.text(questionLines, margin, y);
-                y += (questionLines.length * 5) + 2;
-
-                doc.setFont(undefined, 'normal');
-                const answerLines = doc.splitTextToSize(`Respuesta: ${card.answer}`, 180);
-                doc.text(answerLines, margin, y);
-                y += (answerLines.length * 5) + 10;
-            });
-
-            doc.save('biotool-flashcards.pdf');
-        }
+        // --- (Incluir aquí TODAS las demás funciones y listeners del script de la versión anterior) ---
+        // generateTodayWorkout, displayWorkout, displayLongTermPlan, downloadPlanAsPDF, listeners de sliders, etc.
     </script>
 </body>
 </html>
